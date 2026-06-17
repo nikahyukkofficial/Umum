@@ -707,6 +707,56 @@
       let isLoading = false;
       let currentCategoryId = null;
       let selectedThemeName = "";
+      const hiddenWeddingCategoryIds = new Set();
+
+      function normalizeText(value) {
+        return String(value || "").trim().toLowerCase();
+      }
+
+      function isWeddingCategoryName(name) {
+        return normalizeText(name) === "wedding";
+      }
+
+      function isWeddingTheme(theme) {
+        const categoryIds = [
+          theme.category_id,
+          theme.categoryId,
+          theme.category?.id,
+          theme.category?.category_id,
+        ];
+
+        const hasWeddingCategoryId = categoryIds.some((id) =>
+          id !== undefined &&
+          id !== null &&
+          hiddenWeddingCategoryIds.has(String(id))
+        );
+
+        if (hasWeddingCategoryId) return true;
+
+        const categoryNames = [
+          theme.category?.name,
+          theme.category_name,
+          theme.categoryName,
+        ];
+
+        const hasWeddingCategoryName = categoryNames.some(isWeddingCategoryName);
+
+        if (hasWeddingCategoryName) return true;
+
+        if (Array.isArray(theme.categories)) {
+          return theme.categories.some((category) => {
+            const categoryId = category.id ?? category.category_id;
+            return (
+              (categoryId !== undefined &&
+                categoryId !== null &&
+                hiddenWeddingCategoryIds.has(String(categoryId))) ||
+              isWeddingCategoryName(category.name)
+            );
+          });
+        }
+
+        return false;
+      }
 
       function updatePackageLinks() {
         const packageButtons = document.querySelectorAll("[data-package-name]");
@@ -748,13 +798,14 @@
 
           const result = await response.json();
           const themes = result.data?.data || [];
+          const visibleThemes = themes.filter((theme) => !isWeddingTheme(theme));
 
           // Simpan URL untuk halaman berikutnya
           nextPageUrl = result.data?.next_page_url || null;
           if (nextPageUrl) nextPageUrl = nextPageUrl.replace("http:", "https:");
 
           // Render setiap tema
-          themes.forEach((theme) => {
+          visibleThemes.forEach((theme) => {
             const card = document.createElement("div");
             card.innerHTML = `
               <div class="bg-card rounded shadow-lg hover:shadow-2xl transition duration-300">
@@ -829,6 +880,13 @@
           const categories = result.data || [];
 
           categories.forEach((category) => {
+            if (isWeddingCategoryName(category.name)) {
+              if (category.id !== undefined && category.id !== null) {
+                hiddenWeddingCategoryIds.add(String(category.id));
+              }
+              return;
+            }
+
             const buttonCategory = document.createElement("button");
             buttonCategory.className =
               "btn text-sm sm:text-base inline-flex items-center text-center justify-center rounded h-8 px-2 bg-secondary hover:bg-secondary m-1 hover:cursor-pointer";
@@ -850,9 +908,13 @@
       }
       
       // Load pertama kali
-      updatePackageLinks();
-      loadCategories();
-      loadThemes();
+      async function initPage() {
+        updatePackageLinks();
+        await loadCategories();
+        loadThemes();
+      }
+
+      initPage();
     </script>
   </body>
 </html>
