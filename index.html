@@ -524,6 +524,7 @@
               <div class="text-4xl font-bold">Rp69.000</div>
             </div>
             <a
+              data-package-name="Basic"
               href="https://wa.me/6285704148351?text=Saya+mau+pesan+paket+Basic"
               target="_blank"
               rel="nofollow"
@@ -553,6 +554,7 @@
               <div class="text-4xl font-bold">Rp119.000</div>
             </div>
             <a
+              data-package-name="Premium"
               href="https://wa.me/6285704148351?text=Saya+mau+pesan+paket+Premium"
               target="_blank"
               rel="nofollow"
@@ -581,12 +583,13 @@
               <div class="text-4xl font-bold">Rp249.000</div>
             </div>
             <a
-              href="https://wa.me/6285704148351?text=Saya+mau+pesan+paket+Elite"
+              data-package-name="Prioritas"
+              href="https://wa.me/6285704148351?text=Saya+mau+pesan+paket+Prioritas"
               target="_blank"
               rel="nofollow"
               class="btn w-full text-sm sm:text-base inline-flex items-center text-center justify-center rounded h-12 px-2 bg-primary text-white hover:bg-primary"
             >
-              Pesan Paket Elite
+              Pesan Paket Prioritas
             </a>
             <ul class="opacity-90 list-disc pl-4 text-lg">
               <li><b>Semua fitur Paket Grand.</b></li>
@@ -703,6 +706,20 @@
       let nextPageUrl = baseUrl + "/seller/api/v1/products/websites?limit=12"; // halaman awal
       let isLoading = false;
       let currentCategoryId = null;
+      let selectedThemeName = "";
+
+      function updatePackageLinks() {
+        const packageButtons = document.querySelectorAll("[data-package-name]");
+
+        packageButtons.forEach((button) => {
+          const packageName = button.dataset.packageName;
+          const message = selectedThemeName
+            ? `Halo, saya mau pesan tema ${selectedThemeName} menggunakan paket ${packageName}.`
+            : `Halo, saya mau pesan paket ${packageName}.`;
+
+          button.href = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+        });
+      }
 
       async function loadThemes(reset = false) {
         isLoading = true;
@@ -756,10 +773,8 @@
                       Preview
                     </a>
                     <a
-                      href="https://wa.me/${phoneNumber}?text=Saya+mau+pesan+tema+${theme.name}"
-                      target="_blank"
-                      rel="nofollow"
-                      class="btn text-sm sm:text-base inline-flex items-center text-center justify-center rounded h-8 px-2 bg-primary text-white hover:bg-primary"
+                      href="#paket"
+                      class="select-theme-package btn text-sm sm:text-base inline-flex items-center text-center justify-center rounded h-8 px-2 bg-primary text-white hover:bg-primary"
                     >
                       Pesan
                     </a>
@@ -767,6 +782,11 @@
                 </div>
               </div>
             `;
+            const orderButton = card.querySelector(".select-theme-package");
+            if (orderButton) {
+              orderButton.dataset.themeName = theme.name;
+            }
+
             container.appendChild(card);
           });
 
@@ -788,6 +808,14 @@
       document
         .getElementById("loadMore")
         .addEventListener("click", () => loadThemes());
+
+      document.addEventListener("click", (event) => {
+        const orderButton = event.target.closest(".select-theme-package");
+        if (!orderButton) return;
+
+        selectedThemeName = orderButton.dataset.themeName || "";
+        updatePackageLinks();
+      });
 
       // Fetch categories
       async function loadCategories() {
@@ -822,6 +850,7 @@
       }
       
       // Load pertama kali
+      updatePackageLinks();
       loadCategories();
       loadThemes();
     </script>
