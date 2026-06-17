@@ -826,7 +826,19 @@
           console.error(error);
         }
       }
+      <script>
+  function hideWeddingCategory() {
+    const categories = document.querySelectorAll("#categories button");
 
+    categories.forEach(function (button) {
+      const text = button.textContent.trim().toLowerCase();
+
+      if (text === "wedding") {
+        button.style.display = "none";
+      }
+    });
+  }
+      
       // Load pertama kali
       loadCategories();
       loadThemes();
