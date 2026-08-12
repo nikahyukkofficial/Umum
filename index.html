@@ -305,6 +305,21 @@
           <!-- render category disini -->
         </div>
 
+        <div class="max-w-md mx-auto mb-8">
+          <label for="themeSearch" class="sr-only">Cari tema undangan</label>
+          <input
+            id="themeSearch"
+            type="search"
+            placeholder="Cari tema undangan..."
+            autocomplete="off"
+            class="w-full px-4 py-3 bg-card border border-black/10 rounded shadow-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+          />
+        </div>
+
+        <p id="themeSearchEmpty" class="hidden py-8 text-center opacity-70">
+          Tema tidak ditemukan.
+        </p>
+
         <div
           id="themes"
           class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-10"
@@ -712,6 +727,26 @@
       let selectedThemeName = "";
       const hiddenWeddingCategoryIds = new Set();
 
+      function filterThemes() {
+        const query = normalizeText(document.getElementById("themeSearch")?.value);
+        const cards = document.querySelectorAll("#themes > [data-theme-name]");
+        const emptyMessage = document.getElementById("themeSearchEmpty");
+        let visibleCount = 0;
+
+        cards.forEach((card) => {
+          const matches = !query || card.dataset.themeName.includes(query);
+          card.style.display = matches ? "" : "none";
+          if (matches) visibleCount += 1;
+        });
+
+        if (emptyMessage) {
+          emptyMessage.classList.toggle(
+            "hidden",
+            !query || cards.length === 0 || visibleCount > 0
+          );
+        }
+      }
+
       function normalizeText(value) {
         return String(value || "").trim().toLowerCase();
       }
@@ -810,6 +845,7 @@
           // Render setiap tema
           visibleThemes.forEach((theme) => {
             const card = document.createElement("div");
+            card.dataset.themeName = normalizeText(theme.name);
             card.innerHTML = `
               <div class="bg-card rounded shadow-lg hover:shadow-2xl transition duration-300">
                 <div class="aspect-square rounded overflow-hidden">
@@ -844,6 +880,8 @@
             container.appendChild(card);
           });
 
+          filterThemes();
+
           // Jika sudah tidak ada halaman berikutnya
           if (!nextPageUrl) {
             btn.style.display = "none";
@@ -862,6 +900,10 @@
       document
         .getElementById("loadMore")
         .addEventListener("click", () => loadThemes());
+
+      document
+        .getElementById("themeSearch")
+        .addEventListener("input", filterThemes);
 
       document.addEventListener("click", (event) => {
         const orderButton = event.target.closest(".select-theme-package");
